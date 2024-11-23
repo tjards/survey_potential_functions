@@ -58,6 +58,39 @@ def logarithmic(r, A=1):
 def coulomb(r, A=1):
     return A / r
 
+# GROMACS soft-core function (smooths out the potential at small distances)
+def gromacs_soft_core(r, A=1, B=1, sigma=0.5, alpha=2, beta=1, lmbda=1):
+    """
+    Compute the soft-core potential V_soft-core(λ, r).
+    
+    Parameters:
+    - lmbda (float or ndarray): Coupling parameter λ.
+    - r (float or ndarray): Distance r.
+    - A (float): Attraction constant.
+    - B (float): Repulsion constant.
+    - sigma (float): Effective radius for interactions.
+    - alpha (float): Scaling parameter for λ.
+    - beta (float): Smoothness parameter.
+    
+    Returns:
+    - V (float or ndarray): The soft-core potential.
+    """
+    
+    lambda_alpha = lmbda ** alpha
+    r_squared = r ** 2
+    
+    numerator_attraction = A * lambda_alpha
+    numerator_repulsion = B * lambda_alpha
+    
+    denominator_attraction = sigma**(6 * beta) + (lambda_alpha * r_squared) ** beta
+    denominator_repulsion = sigma**(3 * beta) + (lambda_alpha * r_squared) ** beta
+    
+    V = numerator_attraction / denominator_attraction - numerator_repulsion / denominator_repulsion
+    return V
+
+
+
+
 # Set up the range of r values for plotting
 r_values = np.linspace(100, 0.1, 1000)  # Avoid r = 0 to prevent division by zero
 
@@ -71,13 +104,13 @@ plt.plot(r_values, lennard_jones(r_values), label="Lennard-Jones", color="b")
 plt.plot(r_values, morse(r_values), label="Morse", color="g")
 
 # Plot Spring-Like potential
-plt.plot(r_values, spring_like(r_values), label="Spring-Like", color="r")
+plt.plot(r_values, spring_like(r_values), label="Spring-Like", color="r", linestyle = '--')
 
 # Plot Soft Repulsion potential
 plt.plot(r_values, soft_repulsion(r_values), label="Soft Repulsion", color="c")
 
 # Plot Double-Well potential
-plt.plot(r_values, double_well(r_values), label="Double-Well", color="m")
+plt.plot(r_values, double_well(r_values), label="Double-Well", color="m", linestyle = ':')
 
 # Plot Exponential-Attractive and Polynomial-Repulsive potential
 plt.plot(r_values, exp_poly_repulsive(r_values), label="Exponential-Attractive", color="y")
@@ -97,6 +130,9 @@ plt.plot(r_values, logarithmic(r_values), label="Logarithmic", color="pink")
 
 # Plot Coulomb potential
 plt.plot(r_values, coulomb(r_values), label="Coulomb", color="darkblue")
+
+# Plot GROMACs potential
+plt.plot(r_values,  gromacs_soft_core(r_values), label="gromacs_soft_core", color="m")
 
 # Customize the plot
 plt.xlabel('r (distance)')
